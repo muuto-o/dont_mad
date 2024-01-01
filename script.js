@@ -4,13 +4,12 @@ var uiController = (function () {
     avatar : document.querySelector(".avatar"),
     box : document.querySelector(".box"),
     back : document.querySelector(".back"),
-    forward : document.querySelector(".forward"),
-    button : document.querySelector(".btn"),
     message : document.querySelector(".message"),
-    getBoxWithNumber : function(number){
-        return{
-            boxWithId : document.querySelector(".box-" + number)
-        }
+    button : document.querySelector(".dice_btn"),
+    restartBtn : document.querySelector(".restart_btn"),
+    dice : document.querySelector(".dice"),
+    getBoxWithNumber : function(position){
+        return document.querySelector(".box-" + position);
     }
    }
 
@@ -21,54 +20,78 @@ var uiController = (function () {
    }
 })();
 
-var appController = (function (uiController) {
-    
+
+var movementController = (function () {
     var DOMStrings = uiController.getDOM();
+    var startingPoint = 1;
+    var endingPoint = 70;
+    var restartMessage = "Тоглоом эхэллээ";
+    var winningMessage = "Та яллаа";
+    var emptyString = "";
 
-    var number = 1;
+    var position = 1;
 
-    var moveBack = function(){
+    var restart = function(){
+        DOMStrings.getBoxWithNumber(position).classList.toggle("avatar");
+        DOMStrings.getBoxWithNumber(startingPoint).classList.toggle("avatar");
+        position = startingPoint;
+        DOMStrings.message.innerHTML = restartMessage;
+    }
 
-        if(number > 1){
-            DOMStrings.getBoxWithNumber(number).boxWithId.classList.toggle("avatar");
-            DOMStrings.getBoxWithNumber(number - 1).boxWithId.classList.toggle("avatar")
-            number--;
-            DOMStrings.message.innerHTML = "";
+    var moveForward = function(number){
+        if(position + number <= endingPoint){
+            DOMStrings.getBoxWithNumber(position).classList.toggle("avatar");
+            DOMStrings.getBoxWithNumber(position + number).classList.toggle("avatar");
+            position += number;
+            DOMStrings.message.innerHTML = emptyString;
         }else{
-            DOMStrings.message.innerHTML = "You cannot move back";
-        }
-        
-    } 
-
-    var moveForward = function(){
-        if(number < 23){
-            DOMStrings.getBoxWithNumber(number).boxWithId.classList.toggle("avatar");
-            DOMStrings.getBoxWithNumber(number + 1).boxWithId.classList.toggle("avatar");
-            number++;
-            DOMStrings.message.innerHTML = "";
-        }else{
-            DOMStrings.message.innerHTML = "You cannot move forward";
+            DOMStrings.message.innerHTML = winningMessage;
         }
         
     }
 
-    var moveAvatar = function(){
-        DOMStrings.back.addEventListener("click", function(){
-            moveBack();
-        });
+    return{
+        restart : function(){
+            restart();
+        },
+        moveForward : function(number){
+            moveForward(number);
+        },
+        getRandomNumber : function(){
+            return Math.floor(Math.random() * 6) + 1;
+        }
+    }
+
+})();
+
+var appController = (function (uiController, movementController) {
     
-        DOMStrings.forward.addEventListener("click", function(){
-            moveForward();
+    
+    var eventListeners = function(){
+        var DOMStrings = uiController.getDOM();
+
+        DOMStrings.button.addEventListener("click", function(){
+
+            var diceNumber = movementController.getRandomNumber();
+            DOMStrings.dice.src = "dice-" + diceNumber + ".png";
+            movementController.moveForward(diceNumber);
+            
         });
+
+        DOMStrings.restartBtn.addEventListener("click", function(){
+            movementController.restart();
+            DOMStrings.dice.src = "dice-0.png";
+        });
+
     }
 
     return{
         init : function(){
             console.log("Successfully started");
-            moveAvatar();
+            eventListeners();
         }
     }
 
-})(uiController);
+})(uiController, movementController);
 
 appController.init();
